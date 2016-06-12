@@ -22,42 +22,92 @@ var sdpConstraints = {
     }
 };
 
-/////////////////////////////////////////////
+var localVideo = document.querySelector('#localVideo');
+var remoteVideo = document.querySelector('#remoteVideo');
+var room;
+var socket;
 
-var room = 'foo';
-// Could prompt for room name:
-// room = prompt('Enter room name:');
+//get user data
+$.ajax({
+    type: "GET",
+    url: "inc/get_user.php",
+    context: document.body,
+    cache: false,
+    timeout: 30000,
+    error: function() {
+        alert("Oj coś poszło nie tak!");
+    },
+    success: function(response) {
+        room = response;
+        startRTC();
+    }
+});
 
-var socket = io.connect();
+function startRTC() {
+    socket = io.connect('https://umsproj.doms.net:8443');
 
-if (room !== '') {
-    socket.emit('create or join', room);
-    console.log('Attempted to create or  join room', room);
+    if (room !== '') {
+        socket.emit('create or join', room);
+        console.log('Attempted to create or  join room', room);
+    }
+
+    socket.on('created', function(room) {
+        console.log('Created room ' + room);
+        isInitiator = true;
+    });
+
+    socket.on('full', function(room) {
+        console.log('Room ' + room + ' is full');
+    });
+
+    socket.on('join', function(room) {
+        console.log('Another peer made a request to join room ' + room);
+        console.log('This peer is the initiator of room ' + room + '!');
+        isChannelReady = true;
+    });
+
+    socket.on('joined', function(room) {
+        console.log('joined: ' + room);
+        isChannelReady = true;
+    });
+
+    socket.on('log', function(array) {
+        console.log.apply(console, array);
+    });
+    // This client receives a message
+    socket.on('message', function(message) {
+        console.log('Client received message:', message);
+        if (message === 'got user media') {
+            maybeStart();
+        } else if (message.type === 'offer') {
+            if (!isInitiator && !isStarted) {
+                maybeStart();
+            }
+            pc.setRemoteDescription(new RTCSessionDescription(message));
+            doAnswer();
+        } else if (message.type === 'answer' && isStarted) {
+            pc.setRemoteDescription(new RTCSessionDescription(message));
+        } else if (message.type === 'candidate' && isStarted) {
+            var candidate = new RTCIceCandidate({
+                sdpMLineIndex: message.label,
+                candidate: message.candidate
+            });
+            pc.addIceCandidate(candidate);
+        } else if (message === 'bye' && isStarted) {
+            socket.emit('bye', room);
+            handleRemoteHangup();
+        }
+    });
+
+    navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: true
+        })
+        .then(gotStream)
+        .catch(function(e) {
+            alert('getUserMedia() error: ' + e.name);
+        });
 }
-
-socket.on('created', function(room) {
-    console.log('Created room ' + room);
-    isInitiator = true;
-});
-
-socket.on('full', function(room) {
-    console.log('Room ' + room + ' is full');
-});
-
-socket.on('join', function(room) {
-    console.log('Another peer made a request to join room ' + room);
-    console.log('This peer is the initiator of room ' + room + '!');
-    isChannelReady = true;
-});
-
-socket.on('joined', function(room) {
-    console.log('joined: ' + room);
-    isChannelReady = true;
-});
-
-socket.on('log', function(array) {
-    console.log.apply(console, array);
-});
 
 ////////////////////////////////////////////////
 
@@ -65,44 +115,6 @@ function sendMessage(message) {
     console.log('Client sending message: ', message);
     socket.emit('message', message);
 }
-
-// This client receives a message
-socket.on('message', function(message) {
-    console.log('Client received message:', message);
-    if (message === 'got user media') {
-        maybeStart();
-    } else if (message.type === 'offer') {
-        if (!isInitiator && !isStarted) {
-            maybeStart();
-        }
-        pc.setRemoteDescription(new RTCSessionDescription(message));
-        doAnswer();
-    } else if (message.type === 'answer' && isStarted) {
-        pc.setRemoteDescription(new RTCSessionDescription(message));
-    } else if (message.type === 'candidate' && isStarted) {
-        var candidate = new RTCIceCandidate({
-            sdpMLineIndex: message.label,
-            candidate: message.candidate
-        });
-        pc.addIceCandidate(candidate);
-    } else if (message === 'bye' && isStarted) {
-        handleRemoteHangup();
-    }
-});
-
-////////////////////////////////////////////////////
-
-var localVideo = document.querySelector('#localVideo');
-var remoteVideo = document.querySelector('#remoteVideo');
-
-navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: true
-    })
-    .then(gotStream)
-    .catch(function(e) {
-        alert('getUserMedia() error: ' + e.name);
-    });
 
 function gotStream(stream) {
     console.log('Adding local stream.');
@@ -112,20 +124,6 @@ function gotStream(stream) {
     if (isInitiator) {
         maybeStart();
     }
-}
-
-var constraints = {
-    video: true,
-    audio: true
-};
-
-console.log('Getting user media with constraints', constraints);
-
-if (location.hostname !== 'localhost') {
-    requestTurn(
-        //'https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913'
-        'https://umsproj.doms.net:8443/turn?username=41784574&key=4080218913'
-    );
 }
 
 function maybeStart() {
@@ -143,6 +141,7 @@ function maybeStart() {
 }
 
 window.onbeforeunload = function() {
+    socket.emit('bye', room);
     sendMessage('bye');
 };
 
@@ -234,6 +233,7 @@ function handleRemoteStreamRemoved(event) {
 
 function hangup() {
     console.log('Hanging up.');
+    socket.emit('bye', room);
     stop();
     sendMessage('bye');
 }
@@ -266,7 +266,7 @@ function preferOpus(sdp) {
         }
     }
     if (mLineIndex === null) {
-        return sdp;
+        return sdp; << << << < HEAD
     }
 
     // If Opus is available, set it as the default in m line.
@@ -281,11 +281,27 @@ function preferOpus(sdp) {
         }
     }
 
-    // Remove CN in m line and sdp.
-    sdpLines = removeCN(sdpLines, mLineIndex);
+    === === =
+}
 
-    sdp = sdpLines.join('\r\n');
-    return sdp;
+// If Opus is available, set it as the default in m line.
+for (i = 0; i < sdpLines.length; i++) {
+    if (sdpLines[i].search('opus/48000') !== -1) {
+        var opusPayload = extractSdp(sdpLines[i], /:(\d+) opus\/48000/i);
+        if (opusPayload) {
+            sdpLines[mLineIndex] = setDefaultCodec(sdpLines[mLineIndex],
+                opusPayload);
+        }
+        break;
+    }
+}
+
+>>> >>> > master
+// Remove CN in m line and sdp.
+sdpLines = removeCN(sdpLines, mLineIndex);
+
+sdp = sdpLines.join('\r\n');
+return sdp;
 }
 
 function extractSdp(sdpLine, pattern) {

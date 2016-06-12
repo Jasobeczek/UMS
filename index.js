@@ -5,6 +5,11 @@ var nodeStatic = require('node-static');
 var https = require('https');
 var socketIO = require('socket.io');
 var fs = require('fs');
+var pg = require('pg');
+var connectionString = "postgres://ums:ums.123@localhost/ums";
+
+var client = new pg.Client(connectionString);
+client.connect();
 
 //SSL options
 var options = {
@@ -35,6 +40,9 @@ io.sockets.on('connection', function(socket) {
 
         // for a real app, would be room-only (not broadcast)
         socket.broadcast.emit('message', message);
+    });
+    socket.on('bye', function(room) {
+        log('Client ID ' + socket.id + ' leaving room ' + room);
     });
 
     socket.on('create or join', function(room) {

@@ -1,8 +1,17 @@
 body {
-  font-family: sans-serif;
+    font-family: sans-serif;
 }
 
 video {
-  max-width: 100%;
-  width: 320px;
+    max-width: 100%;
+}
+
+#localVideo {
+    margin-top: 10px;
+    max-width: 70%;
+}
+
+#remoteVideo {
+    margin-top: 10px;
+    max-width: 70%;
 }

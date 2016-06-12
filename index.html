@@ -1,42 +1,29 @@
 <html>
 
 <head>
-    <title>Realtime communication with WebRTC</title>
-    <link rel="stylesheet" href="/css/main.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- NodeJS -->
-    <script src="/socket.io/socket.io.js"></script>
-    <!-- CSS -->
+    <title>UMS webRTC</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <link href="css/bootstrap.css" rel="stylesheet" type="text/css" />
-    <!-- JS -->
     <script src="js/jquery-2.1.4.min.js"></script>
-    <!-- Bootstrap -->
     <script src="js/bootstrap.min.js" type="text/javascript"></script>
-    <script src="js/lib/adapter.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/index.js"></script>
 </head>
 
 <body>
-    <nav class="nav navbar-fixed-top navbar-default">
-        <div class="container-fluid">
-            <!-- Mobile -->
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#NavigationBar" aria-expanded="false">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#" onclick="showMain()">UMS</a>
-            </div>
-            <div class="collapse navbar-collapse" id="NavigationBar">
-            </div>
+    <div class="panel panel-primary" style="max-width: 50%; margin: auto;">
+        <div class="panel-heading">Logowanie i rejestrowanie</div>
+        <div class="panel-body">
+            <form class="form" action="#" onsubmit="return registerUser()">
+                <div class="form-group">
+                    <label for="loginName">Login</label>
+                    <input type="text" class="form-control" id="loginName" placeholder="Nazwa użytkownika">
+                </div>
+                <div class="form-group">
+                    <label for="loginPass">Hasło</label>
+                    <input type="password" class="form-control" id="loginPass" placeholder="Hasło">
+                </div>
+                <button type="submit" class="btn btn-default">Zatwierdź</button>
+            </form>
         </div>
-    </nav>
-    <div id="videos">
-        <video id="localVideo" autoplay muted></video>
-        <video id="remoteVideo" autoplay></video>
     </div>
 </body>
 
