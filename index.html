@@ -1,27 +1,43 @@
-<!DOCTYPE html>
 <html>
 
 <head>
-
-  <title>Realtime communication with WebRTC</title>
-
-  <link rel="stylesheet" href="/css/main.css" />
-
+    <title>Realtime communication with WebRTC</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- NodeJS -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet" type="text/css" />
+    <!-- JS -->
+    <script src="js/jquery-2.1.4.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="js/lib/adapter.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/index.js"></script>
 </head>
 
 <body>
-
-  <h1>Realtime communication with WebRTC</h1>
-
-  <div id="videos">
-    <video id="localVideo" autoplay muted></video>
-    <video id="remoteVideo" autoplay></video>
-  </div>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="js/lib/adapter.js"></script>
-  <script src="js/main.js"></script>
-
+    <nav class="nav navbar-fixed-top navbar-default">
+        <div class="container-fluid">
+            <!-- Mobile -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#NavigationBar" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#" onclick="showMain()">UMS</a>
+            </div>
+            <div class="collapse navbar-collapse" id="NavigationBar">
+            </div>
+        </div>
+    </nav>
+    <div id="videos">
+        <video id="localVideo" autoplay muted></video>
+        <video id="remoteVideo" autoplay></video>
+    </div>
 </body>
 
 </html>
