@@ -27,7 +27,7 @@ var remoteVideo = document.querySelector('#remoteVideo');
 var room;
 var socket;
 
-//get user data
+//Get inital room for user
 $.ajax({
     type: "GET",
     url: "inc/get_user.php",
@@ -42,6 +42,10 @@ $.ajax({
         startRTC();
     }
 });
+
+function setRoom(roomName) {
+    room = roomName;
+}
 
 function startRTC() {
     socket = io.connect('https://umsproj.doms.net:8443');
@@ -134,15 +138,15 @@ function maybeStart() {
         pc.addStream(localStream);
         isStarted = true;
         console.log('isInitiator', isInitiator);
-        if (isInitiator) {
-            doCall();
-        }
+        //if (isInitiator) {
+        doCall();
+        //}
     }
 }
 
 window.onbeforeunload = function() {
     socket.emit('bye', room);
-    sendMessage('bye');
+    //sendMessage('bye');
 };
 
 /////////////////////////////////////////////////////////
@@ -200,7 +204,7 @@ function doAnswer() {
 
 function setLocalAndSendMessage(sessionDescription) {
     // Set Opus as the preferred codec in SDP if Opus is present.
-    //  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
+    sessionDescription.sdp = preferOpus(sessionDescription.sdp);
     pc.setLocalDescription(sessionDescription);
     console.log('setLocalAndSendMessage sending message', sessionDescription);
     sendMessage(sessionDescription);
@@ -235,6 +239,8 @@ function hangup() {
     console.log('Hanging up.');
     socket.emit('bye', room);
     stop();
+    isStarted = false;
+    isChannelReady = false;
     sendMessage('bye');
 }
 
@@ -248,7 +254,9 @@ function stop() {
     isStarted = false;
     // isAudioMuted = false;
     // isVideoMuted = false;
-    pc.close();
+    if (pc !== undefined) {
+        pc.close();
+    }
     pc = null;
 }
 ///////////////////////////////////////////

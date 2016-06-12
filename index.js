@@ -42,7 +42,8 @@ io.sockets.on('connection', function(socket) {
         socket.broadcast.emit('message', message);
     });
     socket.on('bye', function(room) {
-        log('Client ID ' + socket.id + ' leaving room ' + room);
+        console.log('Client ID ' + socket.id + ' leaving room ' + room);
+        socket.leave(room);
     });
 
     socket.on('create or join', function(room) {

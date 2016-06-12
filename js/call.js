@@ -63,6 +63,25 @@ function searchName(searchName) {
 }
 
 function connectToUser() {
-    var userName = $('#searchUser');
+    setRoom($('#searchUser').val());
+    startRTC();
+    return false;
+}
+
+function reconnectSelf() {
+    $.ajax({
+        type: "GET",
+        url: "inc/get_user.php",
+        context: document.body,
+        cache: false,
+        timeout: 30000,
+        error: function() {
+            alert("Oj coś poszło nie tak!");
+        },
+        success: function(response) {
+            setRoom(response);
+            startRTC();
+        }
+    });
     return false;
 }
