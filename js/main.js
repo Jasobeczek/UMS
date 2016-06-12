@@ -251,7 +251,6 @@ function stop() {
     pc.close();
     pc = null;
 }
-
 ///////////////////////////////////////////
 
 // Set Opus as the default audio codec if it's present.
@@ -280,26 +279,12 @@ function preferOpus(sdp) {
             break;
         }
     }
-}
 
-// If Opus is available, set it as the default in m line.
-for (i = 0; i < sdpLines.length; i++) {
-    if (sdpLines[i].search('opus/48000') !== -1) {
-        var opusPayload = extractSdp(sdpLines[i], /:(\d+) opus\/48000/i);
-        if (opusPayload) {
-            sdpLines[mLineIndex] = setDefaultCodec(sdpLines[mLineIndex],
-                opusPayload);
-        }
-        break;
-    }
-}
+    // Remove CN in m line and sdp.
+    sdpLines = removeCN(sdpLines, mLineIndex);
 
->>> >>> > master
-// Remove CN in m line and sdp.
-sdpLines = removeCN(sdpLines, mLineIndex);
-
-sdp = sdpLines.join('\r\n');
-return sdp;
+    sdp = sdpLines.join('\r\n');
+    return sdp;
 }
 
 function extractSdp(sdpLine, pattern) {
