@@ -266,7 +266,7 @@ function preferOpus(sdp) {
         }
     }
     if (mLineIndex === null) {
-        return sdp; << << << < HEAD
+        return sdp;
     }
 
     // If Opus is available, set it as the default in m line.
@@ -280,8 +280,6 @@ function preferOpus(sdp) {
             break;
         }
     }
-
-    === === =
 }
 
 // If Opus is available, set it as the default in m line.
