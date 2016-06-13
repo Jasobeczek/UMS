@@ -1,0 +1,9 @@
+{
+    "undef": true,
+    "browser": true,
+    "jquery": true,
+    "plusplus": true,
+    "devel": true,
+    "nomen": true,
+    "node": true
+}
