@@ -75,6 +75,11 @@ function startRTC() {
         isChannelReady = true;
     });
 
+    socket.on('leave', function(room) {
+        console.log('Leaved room ' + room);
+        isChannelReady = false;
+    });
+
     socket.on('log', function(array) {
         console.log.apply(console, array);
     });
@@ -211,7 +216,7 @@ function setLocalAndSendMessage(sessionDescription) {
 }
 
 function onCreateSessionDescriptionError(error) {
-    trace('Failed to create session description: ' + error.toString());
+    console.log(('Failed to create session description: ' + error.toString()));
 }
 
 function requestTurn(turnURL) {
@@ -237,11 +242,13 @@ function handleRemoteStreamRemoved(event) {
 
 function hangup() {
     console.log('Hanging up.');
-    socket.emit('bye', room);
     stop();
-    isStarted = false;
     isChannelReady = false;
-    sendMessage('bye');
+}
+
+function leaveRoom() {
+    console.log('Leaving room...');
+    socket.emit('bye', room);
 }
 
 function handleRemoteHangup() {
@@ -254,9 +261,7 @@ function stop() {
     isStarted = false;
     // isAudioMuted = false;
     // isVideoMuted = false;
-    if (pc !== undefined) {
-        pc.close();
-    }
+    pc.close();
     pc = null;
 }
 ///////////////////////////////////////////

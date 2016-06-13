@@ -44,6 +44,8 @@ io.sockets.on('connection', function(socket) {
     socket.on('bye', function(room) {
         console.log('Client ID ' + socket.id + ' leaving room ' + room);
         socket.leave(room);
+        socket.emit('leave', room, socket.id);
+
     });
 
     socket.on('create or join', function(room) {

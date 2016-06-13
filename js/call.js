@@ -79,9 +79,15 @@ function reconnectSelf() {
             alert("Oj coś poszło nie tak!");
         },
         success: function(response) {
+            leaveRoom();
             setRoom(response);
             startRTC();
         }
     });
     return false;
+}
+
+function hangupCall() {
+    hangup();
+    reconnectSelf();
 }
