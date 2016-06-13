@@ -68,7 +68,11 @@ function connectToUser() {
     return false;
 }
 
-function reconnectSelf() {
+/**
+ * Init webRTC socket
+ * @return {bool} false
+ */
+function startRTC() {
     $.ajax({
         type: "GET",
         url: "inc/get_user.php",
@@ -79,12 +83,20 @@ function reconnectSelf() {
             alert("Oj coś poszło nie tak!");
         },
         success: function(response) {
-            leaveRoom();
-            setRoom(response);
-            startRTC();
+            if (response !== "") {
+                startWebRTC(response);
+            }
         }
     });
     return false;
+}
+
+/**
+ * Stop webRTC socket
+ * @return {bool} false
+ */
+function stopRTC() {
+    maybeStop();
 }
 
 function hangupCall() {
