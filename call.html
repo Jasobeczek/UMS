@@ -40,25 +40,31 @@
     <div class="panel panel-primary">
         <div class="panel-heading">Video</div>
         <div class="panel-body">
-            <form class="form-inline" onsubmit="return connectToUser()">
-                <div class="form-group">
-                    <label for="searchUser">Szukaj</label>
-                    <input type="text" class="form-control" id="searchUser" placeholder="Szukaj użytkownika" autocomplete="off">
-                </div>
-                <button type="submit" class="btn btn-default">Połącz</button>
-            </form>
-            <div i class="dropdown" style="margin-left: 48px;">
-                <ul id="searchUserResults" class="dropdown-menu" aria-expanded="false" data-toggle="dropdown" aria-haspopup="true">
-                </ul>
-            </div>
             <div class="row">
-                <div class="col col-sm-4">
+                <div class="col col-sm-4" style="border-right: rgba(117, 111, 111, 0.52); border-right-width: 1px;  border-right-style: dashed;">
                     <div>
                         <video id="localVideo" autoplay muted=""></video>
                     </div>
                     <div>
-                        <button class="btn btn-default" onclick="return hangupCall()">Rozłącz</button>
-                        <button class="btn btn-default" onclick="return reconnectSelf()">Odśwież</button>
+                        <div class="form-group">
+                            <label for="searchUser">Video</label>
+                            <button class="btn btn-default" onclick="return startRTC()">Włącz</button>
+                            <button class="btn btn-default" onclick="return stopRTC()">Wyłącz</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <form class="form-inline" onsubmit="return connectToUser()">
+                            <div class="form-group">
+                                <label for="searchUser">Szukaj</label>
+                                <input type="text" class="form-control" id="searchUser" placeholder="Szukaj użytkownika" autocomplete="off">
+                            </div>
+                            <button type="submit" class="btn btn-success">Połącz</button>
+                            <button class="btn btn-danger" onclick="return hangupCall()">Rozłącz</button>
+                        </form>
+                        <div i class="dropdown" style="margin-left: 48px;">
+                            <ul id="searchUserResults" class="dropdown-menu" aria-expanded="false" data-toggle="dropdown" aria-haspopup="true">
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="col col-sm-8">
