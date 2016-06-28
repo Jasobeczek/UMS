@@ -1,4 +1,9 @@
-function registerUser() {
+/**
+ * Register or login user
+ * @param  {bool} doRegister True - register, False - login
+ * @return {bool}
+ */
+function authUser(doRegister) {
     var user = $('#loginName').val();
     var pass = $('#loginPass').val();
     $.ajax({
@@ -10,6 +15,7 @@ function registerUser() {
         data: ({
             UserName: user,
             UserPassword: pass,
+            UserRegister: doRegister,
         }),
         error: function() {
             alert("Coś poszło nie tak!");
@@ -23,4 +29,18 @@ function registerUser() {
         }
     });
     return false;
+}
+
+/**
+ * Register user
+ */
+function registerUser() {
+    return authUser(true);
+}
+
+/**
+ * Login user
+ */
+function loginUser() {
+    return authUser(false);
 }

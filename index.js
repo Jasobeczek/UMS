@@ -36,13 +36,44 @@ io.sockets.on('connection', function(socket) {
     }
 
     //Server recived general message
-    socket.on('message', function(message) {
+    /*socket.on('message', function(message) {
         log('Client said: ', message);
         console.log('Client said: ', message);
 
 
         // for a real app, would be room-only (not broadcast)
-        //socket.broadcast.emit('message', message);
+        //io.sockets.in(room).emit('message', message);
+        socket.broadcast.emit('message', message);
+    });*/
+
+    socket.on('offer', function(array) {
+        var message = array[0];
+        var room = array[1];
+        console.log('Received offer from ' + socket.id + ' in room: ' + room);
+        socket.to(room).emit('offer', message);
+
+    });
+
+    socket.on('answer', function(array) {
+        var message = array[0];
+        var room = array[1];
+        console.log('Received answer from ' + socket.id + ' in room: ' + room);
+        socket.to(room).emit('answer', message);
+    });
+
+    socket.on('candidate', function(array) {
+
+        var message = array[0];
+        var room = array[1];
+        console.log('Received candidate from ' + socket.id + ' in room: ' + room);
+
+        socket.to(room).emit('candidate', message);
+
+    });
+
+    socket.on('got media', function(room) {
+        console.log('Received got media from ' + socket.id + ' in room: ' + room);
+        socket.to(room).emit('got media', room);
     });
 
     //Server received bye message
@@ -50,7 +81,11 @@ io.sockets.on('connection', function(socket) {
     socket.on('bye', function(room) {
         console.log('Client ID ' + socket.id + ' leaving room ' + room);
         socket.leave(room);
-        socket.emit('leave', room, socket.id);
+        socket.to(room).emit('leave', room);
+        socket.disconnect();
+        var numClients = io.sockets.socket.rooms[room].length;
+        console.log('Room ' + room + ' now has ' + numClients + ' client(s)');
+
     });
 
     //Server received create or join message
@@ -59,32 +94,23 @@ io.sockets.on('connection', function(socket) {
         log('Received request to create or join room ' + room);
         console.log('Received request to create or join room ' + room);
 
-        var numClients = io.sockets.sockets.length;
-        log('Room ' + room + ' now has ' + numClients + ' client(s)');
-
-        if (numClients === 1) {
-            //Add client to room
+        var ioRooms = io.sockets.adapter.rooms;
+        if (ioRooms[room] === undefined) { //Room doesn't exists
             socket.join(room);
-            log('Client ID ' + socket.id + ' created room ' + room);
-            console.log('Client ID ' + socket.id + ' created room ' + room);
+            socket.emit('created', room);
+        } else { //Room exists
+            if (ioRooms[room].length > 2) {
+                socket.emit('full', room); //Send message to initiator - room is full
 
-            //Send message to client
-            socket.emit('created', room, socket.id);
-
-        } else if (numClients === 2) {
-            log('Client ID ' + socket.id + ' joined room ' + room);
-            console.log('Client ID ' + socket.id + ' joined room ' + room);
-
-            io.sockets.in(room).emit('join', room); //Send message to clients that someone joined room
-
-            socket.join(room); //Join client to room
-
-            socket.emit('joined', room, socket.id); //Send message to client
-            io.sockets.in(room).emit('ready'); //Tell clients that room is read
-
-        } else {
-            socket.emit('full', room);
+            } else {
+                socket.join(room);
+                socket.emit('joined', room); //Sned message to initiator to inform that he is in room
+                socket.to(room).emit('join', room); //Send message to clients that someone joined room
+            }
         }
+        var numClients = ioRooms[room].length;
+        log('Room ' + room + ' now has ' + numClients + ' client(s)');
+        console.log('Room ' + room + ' now has ' + numClients + ' client(s)');
     });
 
     //Server received ipaddr message

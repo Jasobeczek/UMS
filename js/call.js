@@ -63,8 +63,8 @@ function searchName(searchName) {
 }
 
 function connectToUser() {
-    setRoom($('#searchUser').val());
-    startRTC();
+    var roomName = $('#searchUser').val();
+    startWebRTC(roomName);
     return false;
 }
 

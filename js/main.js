@@ -3,6 +3,7 @@
 var isChannelReady = false;
 var isInitiator = false;
 var isStarted = false;
+var isInRoom = false;
 var localStream;
 var pc;
 var remoteStream;
@@ -61,6 +62,7 @@ var remoteVideo = null;
 function startWebRTC(roomName) {
     room = roomName;
     socket = io.connect('https://umsproj.doms.net:8443');
+
     localVideo = document.querySelector('#localVideo');
     remoteVideo = document.querySelector('#remoteVideo');
 
@@ -75,27 +77,29 @@ function startWebRTC(roomName) {
     socket.on('created', function(room) {
         console.log('Created room ' + room);
         isInitiator = true;
+        isInRoom = true;
     });
 
     //Respond to full message
     //This client can't join the room cause there are 2 clients
     socket.on('full', function(room) {
         console.log('Room ' + room + ' is full');
+        isInRoom = false;
+        isChannelReady = false;
+        isInitiator = false;
     });
 
-    //Respond to join message
+    socket.on('joined', function(room) {
+        console.log('Joined room' + room);
+        isInRoom = true;
+    });
+
+    //Respond to join message from room
     //Other client was accepted to join the room
     socket.on('join', function(room) {
-        console.log('Another peer made a request to join room ' + room);
-        console.log('This peer is the initiator of room ' + room + '!');
+        console.log('Another peer joined room ' + room);
         isChannelReady = true;
-    });
-
-    //Respond to join message
-    //Client was accepted to join the room  
-    socket.on('joined', function(room) {
-        console.log('joined: ' + room);
-        isChannelReady = true;
+        maybeStart();
     });
 
     //Respond to log message
@@ -115,33 +119,35 @@ function startWebRTC(roomName) {
         }
         pc = null;
         socket = null;
+        isInRoom = false;
     });
 
-
-
-    //Respond to general message
-    //offer message - parameters for connection
-    //answer - answer for parameters for connection
-    //candidate - ice candidate for connection
-    socket.on('message', function(message) {
-        console.log('Client received message:', message);
-        if (message === 'got user media') {
+    socket.on('offer', function(message) {
+        if (!isInitiator && !isStarted) {
             maybeStart();
-        } else if (message.type === 'offer') {
-            if (!isInitiator && !isStarted) {
-                maybeStart();
-            }
+        }
+        pc.setRemoteDescription(new RTCSessionDescription(message));
+        doAnswer();
+    });
+
+    socket.on('answer', function(message) {
+        if (isStarted) {
             pc.setRemoteDescription(new RTCSessionDescription(message));
-            doAnswer();
-        } else if (message.type === 'answer' && isStarted) {
-            pc.setRemoteDescription(new RTCSessionDescription(message));
-        } else if (message.type === 'candidate' && isStarted) {
+        }
+    });
+
+    socket.on('candidate', function(message) {
+        if (isStarted) {
             var candidate = new RTCIceCandidate({
                 sdpMLineIndex: message.label,
                 candidate: message.candidate
             });
             pc.addIceCandidate(candidate);
-        } else if (message === 'bye' && isStarted) {
+        }
+    });
+
+    socket.on('bye', function() {
+        if (isStarted) {
             handleRemoteHangup();
         }
     });
@@ -156,16 +162,20 @@ function startWebRTC(roomName) {
             alert('getUserMedia() error: ' + e.name);
         });
 
+    /**
+     * Set streams for localVideo
+     * @param  {object} stream Stream for video object
+     */
     function gotStream(stream) {
         console.log('Adding local stream.');
         localVideo.src = window.URL.createObjectURL(stream);
         localStream = stream;
-        sendMessage('got user media');
+        socket.emit('got media', room);
+        //sendMessage('got user media');
         if (isInitiator) {
             maybeStart();
         }
     }
-
 
     var constraints = {
         video: true,
@@ -204,16 +214,23 @@ function maybeStart() {
     }
 }
 
+/**
+ * Stop webRTC
+ */
 function maybeStop() {
     if (socket) {
         socket.emit('bye', room);
     }
-    for (var i = localStream.getTracks().length - 1; i >= 0; i--) {
-        localStream.getTracks()[i].stop();
+    if (localStream) {
+        for (var i = localStream.getTracks().length - 1; i >= 0; i--) {
+            localStream.getTracks()[i].stop();
+        }
     }
 }
 window.onbeforeunload = function() {
-    sendMessage('bye');
+    if (socket) {
+        socket.emit('bye', room);
+    }
 };
 
 /////////////////////////////////////////////////////////
@@ -235,12 +252,19 @@ function createPeerConnection() {
 function handleIceCandidate(event) {
     console.log('icecandidate event: ', event);
     if (event.candidate) {
-        sendMessage({
+        var message = {
             type: 'candidate',
             label: event.candidate.sdpMLineIndex,
             id: event.candidate.sdpMid,
             candidate: event.candidate.candidate
-        });
+        };
+        socket.emit('candidate', [message, room]);
+        /*sendMessage({
+            type: 'candidate',
+            label: event.candidate.sdpMLineIndex,
+            id: event.candidate.sdpMid,
+            candidate: event.candidate.candidate
+        });*/
     } else {
         console.log('End of candidates.');
     }
@@ -258,27 +282,37 @@ function handleCreateOfferError(event) {
 
 function doCall() {
     console.log('Sending offer to peer');
-    pc.createOffer(setLocalAndSendMessage, handleCreateOfferError);
+    pc.createOffer(setLocalAndSendOffer, handleCreateOfferError);
 }
 
 function doAnswer() {
     console.log('Sending answer to peer.');
     pc.createAnswer().then(
-        setLocalAndSendMessage,
+        setLocalAndSendAnswer,
         onCreateSessionDescriptionError
     );
 }
 
-function setLocalAndSendMessage(sessionDescription) {
+function setLocalAndSendOffer(sessionDescription) {
     // Set Opus as the preferred codec in SDP if Opus is present.
     //  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
     pc.setLocalDescription(sessionDescription);
     console.log('setLocalAndSendMessage sending message', sessionDescription);
-    sendMessage(sessionDescription);
+    socket.emit('offer', [sessionDescription, room]);
+    //sendMessage(sessionDescription);
+}
+
+function setLocalAndSendAnswer(sessionDescription) {
+    // Set Opus as the preferred codec in SDP if Opus is present.
+    //  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
+    pc.setLocalDescription(sessionDescription);
+    console.log('setLocalAndSendMessage sending message', sessionDescription);
+    socket.emit('answer', [sessionDescription, room]);
+    //sendMessage(sessionDescription);
 }
 
 function onCreateSessionDescriptionError(error) {
-    trace('Failed to create session description: ' + error.toString());
+    console.log('Failed to create session description: ' + error.toString());
 }
 
 function requestTurn(turnURL) {

@@ -13,7 +13,7 @@
     <div class="panel panel-primary" style="max-width: 50%; margin: auto;">
         <div class="panel-heading">Logowanie i rejestrowanie</div>
         <div class="panel-body">
-            <form class="form" action="#" onsubmit="return registerUser()">
+            <form class="form" action="#" onsubmit="return loginUser()">
                 <div class="form-group">
                     <label for="loginName">Login</label>
                     <input type="text" class="form-control" id="loginName" placeholder="Nazwa użytkownika">
@@ -22,7 +22,8 @@
                     <label for="loginPass">Hasło</label>
                     <input type="password" class="form-control" id="loginPass" placeholder="Hasło">
                 </div>
-                <button type="submit" class="btn btn-default">Zatwierdź</button>
+                <button id="btn_login" type="submit" class="btn btn-primary">Zatwierdź</button>
+                <button id="btn_register" class="btn btn-default" onclick="return registerUser()">Zarejestruj</button>
             </form>
         </div>
     </div>
