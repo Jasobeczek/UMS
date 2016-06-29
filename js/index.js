@@ -1,21 +1,19 @@
 /**
- * Register or login user
- * @param  {bool} doRegister True - register, False - login
- * @return {bool}
+ * Login user
+ * @return {bool} false
  */
-function authUser(doRegister) {
-    var user = $('#loginName').val();
-    var pass = $('#loginPass').val();
+function logInUser() {
+    var user = $('#loginUser').val();
+    var pass = $('#passUser').val();
     $.ajax({
         type: "POST",
-        url: "inc/register_user.php",
+        url: "inc/login_user.php",
         context: document.body,
         cache: false,
-        timeout: 30000,
+        timeout: 3000,
         data: ({
-            UserName: user,
+            UserLogin: user,
             UserPassword: pass,
-            UserRegister: doRegister,
         }),
         error: function() {
             alert("Coś poszło nie tak!");
@@ -23,8 +21,6 @@ function authUser(doRegister) {
         success: function(response) {
             if (response == "success") {
                 window.location.href = "call.html";
-            } else if (response == "exists") {
-                alert("Taki użytkownik istnieje");
             } else alert("Coś poszło nie tak!");
         }
     });
@@ -32,15 +28,37 @@ function authUser(doRegister) {
 }
 
 /**
- * Register user
+ * Register new user
+ * @return {bool} false
  */
 function registerUser() {
-    return authUser(true);
-}
-
-/**
- * Login user
- */
-function loginUser() {
-    return authUser(false);
+    var loginUser = $('#loginUser').val();
+    var passUser = $('#passUser').val();
+    var nameUser = $('#nameUser').val();
+    var surnameUser = $('#surnameUser').val();
+    $.ajax({
+        type: "POST",
+        url: "inc/register_user.php",
+        context: document.body,
+        cache: false,
+        timeout: 3000,
+        data: ({
+            UserLogin: loginUser,
+            UserPassword: passUser,
+            UserName: nameUser,
+            UserSurname: surnameUser
+        }),
+        error: function() {
+            alert("Coś poszło nie tak!");
+        },
+        success: function(response) {
+            if (response == "success") {
+                alert("Użytkownik zarejestrowany");
+                window.location.href = "index.html";
+            } else if (response == "exists") {
+                alert("Taki użytkownik istnieje");
+            } else alert("Coś poszło nie tak!");
+        }
+    });
+    return false;
 }

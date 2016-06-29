@@ -40,10 +40,10 @@
             </div>
         </div>
     </nav>
-    <div class="panel panel-primary" style="max-width: 50%; margin: auto;">
-        <div class="panel-heading">Logowanie</div>
+    <div class="panel panel-primary" style="max-width: 50%; margin: auto; margin-top: 20px;">
+        <div class="panel-heading">Rejestrowanie</div>
         <div class="panel-body">
-            <form class="form" action="#" onsubmit="return logInUser()">
+            <form class="form" action="#" onsubmit="return registerUser()">
                 <div class="form-group">
                     <label for="loginUser">Login</label>
                     <input type="text" class="form-control" id="loginUser" placeholder="Nazwa użytkownika">
@@ -52,7 +52,15 @@
                     <label for="passUser">Hasło</label>
                     <input type="password" class="form-control" id="passUser" placeholder="Hasło">
                 </div>
-                <button id="btn_login" type="submit" class="btn btn-primary">Zaloguj</button>
+                <div class="form-group">
+                    <label for="nameUser">Imię</label>
+                    <input type="text" class="form-control" id="nameUser" placeholder="Imię">
+                </div>
+                <div class="form-group">
+                    <label for="surnameUser">Nazwisko</label>
+                    <input type="text" class="form-control" id="surnameUser" placeholder="Nazwisko">
+                </div>
+                <button id="btn_register" type="submit" class="btn btn-primary">Rejestruj</button>
             </form>
         </div>
     </div>

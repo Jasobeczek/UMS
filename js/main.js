@@ -1,13 +1,37 @@
 'use strict';
 
+/**
+ * Status of channel 
+ * @type {Boolean}
+ */
 var isChannelReady = false;
+/**
+ * Did client created the room
+ * @type {Boolean}
+ */
 var isInitiator = false;
+/**
+ * Is connection already started
+ * @type {Boolean}
+ */
 var isStarted = false;
+/**
+ * Is client in room
+ * @type {Boolean}
+ */
 var isInRoom = false;
+/**
+ * Local stream
+ */
 var localStream;
+/**
+ * Peer connection
+ */
 var pc;
+/**
+ * Remote stream
+ */
 var remoteStream;
-var turnReady;
 
 /**
  * PC configuration
@@ -117,8 +141,7 @@ function startWebRTC(roomName) {
     });
 
     //Respond to leave message
-    //Log messages are message shown on server site
-    //useful for debugging
+    //
     socket.on('leave', function() {
         console.log('Leaved: ' + room);
         if (pc) {
@@ -131,6 +154,8 @@ function startWebRTC(roomName) {
         isChannelReady = false;
     });
 
+    //Respond to offer message
+    //Offer other host connection parameters for A/V session
     socket.on('offer', function(message) {
         if (!isStarted) {
             maybeStart();
@@ -139,12 +164,16 @@ function startWebRTC(roomName) {
         doAnswer();
     });
 
+    //Respond to answer message
+    //The answer message for offered connection parameters
     socket.on('answer', function(message) {
         if (isStarted) {
             pc.setRemoteDescription(new RTCSessionDescription(message));
         }
     });
 
+    //Respond to candidate message
+    //Candidate is parameters for video audio
     socket.on('candidate', function(message) {
         if (isStarted) {
             var candidate = new RTCIceCandidate({
@@ -155,6 +184,8 @@ function startWebRTC(roomName) {
         }
     });
 
+    //Respond to bye message
+    //Bye is message for remote hangup
     socket.on('bye', function() {
         if (isStarted) {
             handleRemoteHangup();
@@ -194,12 +225,9 @@ function startWebRTC(roomName) {
     console.log('Getting user media with constraints', constraints);
 }
 
-if (location.hostname !== 'localhost') {
-    requestTurn(
-        'https://umsproj.doms.net:8443/turn?username=41784574&key=4080218913'
-    );
-}
-
+/**
+ * Start connection
+ */
 function maybeStart() {
     console.log('>>>>>>> maybeStart() ', isStarted, localStream, isChannelReady);
     if (!isStarted && typeof localStream !== 'undefined' && isChannelReady) {
@@ -209,7 +237,7 @@ function maybeStart() {
         isStarted = true;
         console.log('isInitiator', isInitiator);
         if (isInitiator) {
-            doCall();
+            sendOffer();
         }
     }
 }
@@ -227,14 +255,17 @@ function maybeStop() {
         }
     }
 }
+//On close or reload send bye message
 window.onbeforeunload = function() {
     if (socket) {
         socket.emit('bye', room);
     }
 };
 
-/////////////////////////////////////////////////////////
-
+/**
+ * Create peer connection
+ * @return {[type]} [description]
+ */
 function createPeerConnection() {
     try {
         pc = new RTCPeerConnection(null);
@@ -249,6 +280,10 @@ function createPeerConnection() {
     }
 }
 
+/**
+ * Handle candidate
+ * @param  {object} event Event object
+ */
 function handleIceCandidate(event) {
     console.log('icecandidate event: ', event);
     if (event.candidate) {
@@ -259,32 +294,40 @@ function handleIceCandidate(event) {
             candidate: event.candidate.candidate
         };
         socket.emit('candidate', [message, room]);
-        /*sendMessage({
-            type: 'candidate',
-            label: event.candidate.sdpMLineIndex,
-            id: event.candidate.sdpMid,
-            candidate: event.candidate.candidate
-        });*/
     } else {
         console.log('End of candidates.');
     }
 }
 
+/**
+ * Remote stream added
+ * @param  {object} event Event data
+ */
 function handleRemoteStreamAdded(event) {
     console.log('Remote stream added.');
     remoteVideo.src = window.URL.createObjectURL(event.stream);
     remoteStream = event.stream;
 }
 
+/**
+ * Create offer error
+ * @param  {object} event Event data
+ */
 function handleCreateOfferError(event) {
     console.log('createOffer() error: ', event);
 }
 
-function doCall() {
+/**
+ * Send offer to peer 
+ */
+function sendOffer() {
     console.log('Sending offer to peer');
     pc.createOffer(setLocalAndSendOffer, handleCreateOfferError);
 }
 
+/**
+ * Answer - send answer to peer
+ */
 function doAnswer() {
     console.log('Sending answer to peer.');
     pc.createAnswer().then(
@@ -293,61 +336,72 @@ function doAnswer() {
     );
 }
 
+/**
+ * Set local parameters for session and emit offer
+ */
 function setLocalAndSendOffer(sessionDescription) {
-    // Set Opus as the preferred codec in SDP if Opus is present.
-    //  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
     pc.setLocalDescription(sessionDescription);
     console.log('setLocalAndSendMessage sending message', sessionDescription);
     socket.emit('offer', [sessionDescription, room]);
     //sendMessage(sessionDescription);
 }
 
+/**
+ * Set local parameters for session and emit answer
+ */
 function setLocalAndSendAnswer(sessionDescription) {
-    // Set Opus as the preferred codec in SDP if Opus is present.
-    //  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
     pc.setLocalDescription(sessionDescription);
     console.log('setLocalAndSendMessage sending message', sessionDescription);
     socket.emit('answer', [sessionDescription, room]);
     //sendMessage(sessionDescription);
 }
-
+/**
+ * Handle session description errors
+ * @param  {object} error Error object
+ */
 function onCreateSessionDescriptionError(error) {
     console.log('Failed to create session description: ' + error.toString());
 }
 
-function requestTurn(turnURL) {
-    var turnExists = false;
-    for (var i in pcConfig.iceServers) {
-        if (pcConfig.iceServers[i].url.substr(0, 5) === 'turn:') {
-            turnExists = true;
-            turnReady = true;
-            break;
-        }
-    }
-}
-
+/**
+ * Stream added 
+ * @param  {object} event Event data
+ */
 function handleRemoteStreamAdded(event) {
     console.log('Remote stream added.');
     remoteVideo.src = window.URL.createObjectURL(event.stream);
     remoteStream = event.stream;
 }
 
+/**
+ * Stream removed 
+ * @param  {object} event Event data
+ */
 function handleRemoteStreamRemoved(event) {
     console.log('Remote stream removed. Event: ', event);
 }
 
-function hangup() {
-    console.log('Hanging up.');
-    stop();
-    maybeStop();
-}
-
+/**
+ * Handle remote hangup 
+ */
 function handleRemoteHangup() {
     console.log('Session terminated.');
     stop();
     isInitiator = false;
 }
 
+/**
+ * End call - hangup
+ */
+function hangup() {
+    console.log('Hanging up.');
+    stop();
+    maybeStop();
+}
+
+/**
+ * Stop webRTC
+ */
 function stop() {
     isStarted = false;
     // isAudioMuted = false;
@@ -358,80 +412,44 @@ function stop() {
     pc = null;
 }
 
-///////////////////////////////////////////
-
-// Set Opus as the default audio codec if it's present.
-function preferOpus(sdp) {
-    var sdpLines = sdp.split('\r\n');
-    var mLineIndex;
-    // Search for m line.
-    for (var i = 0; i < sdpLines.length; i++) {
-        if (sdpLines[i].search('m=audio') !== -1) {
-            mLineIndex = i;
-            break;
-        }
-    }
-    if (mLineIndex === null) {
-        return sdp;
-    }
-
-    // If Opus is available, set it as the default in m line.
-    for (i = 0; i < sdpLines.length; i++) {
-        if (sdpLines[i].search('opus/48000') !== -1) {
-            var opusPayload = extractSdp(sdpLines[i], /:(\d+) opus\/48000/i);
-            if (opusPayload) {
-                sdpLines[mLineIndex] = setDefaultCodec(sdpLines[mLineIndex],
-                    opusPayload);
+//Make statistics
+var statistics = {};
+statistics.BytesReceivedAudio = 0;
+statistics.BytesReceivedVideo = 0;
+setInterval(function() {
+    if (pc) {
+        var aSelector = pc.getRemoteStreams()[0].getAudioTracks()[0];
+        pc.getStats(function(stats) {
+            var result = stats.result();
+            for (var i = 0; i < result.length; ++i) {
+                if (result[i].type === "ssrc") {
+                    var ssrc = result[i];
+                    var bytesReceived = parseInt(ssrc.stat("bytesReceived"));
+                    var bitRate = (bytesReceived - statistics.BytesReceivedAudio) / 1024;
+                    $('#BitRateAudio').val(bitRate + "KB/s");
+                    $('#BytesReceivedAudio').val(ssrc.stat("bytesReceived"));
+                    $('#PacketsReceivedAudio').val(ssrc.stat("packetsReceived"));
+                    $('#PacketsLostAudio').val(ssrc.stat("packetsLost"));
+                    statistics.BytesReceivedAudio = bytesReceived;
+                }
             }
-            break;
-        }
-    }
+        }, aSelector);
 
-    // Remove CN in m line and sdp.
-    sdpLines = removeCN(sdpLines, mLineIndex);
-
-    sdp = sdpLines.join('\r\n');
-    return sdp;
-}
-
-function extractSdp(sdpLine, pattern) {
-    var result = sdpLine.match(pattern);
-    return result && result.length === 2 ? result[1] : null;
-}
-
-// Set the selected codec to the first in m line.
-function setDefaultCodec(mLine, payload) {
-    var elements = mLine.split(' ');
-    var newLine = [];
-    var index = 0;
-    for (var i = 0; i < elements.length; i++) {
-        if (index === 3) { // Format of media starts from the fourth.
-            newLine[index++] = payload; // Put target payload to the first.
-        }
-        if (elements[i] !== payload) {
-            newLine[index++] = elements[i];
-        }
-    }
-    return newLine.join(' ');
-}
-
-// Strip CN from sdp before CN constraints is ready.
-function removeCN(sdpLines, mLineIndex) {
-    var mLineElements = sdpLines[mLineIndex].split(' ');
-    // Scan from end for the convenience of removing an item.
-    for (var i = sdpLines.length - 1; i >= 0; i--) {
-        var payload = extractSdp(sdpLines[i], /a=rtpmap:(\d+) CN\/\d+/i);
-        if (payload) {
-            var cnPos = mLineElements.indexOf(payload);
-            if (cnPos !== -1) {
-                // Remove CN payload from m line.
-                mLineElements.splice(cnPos, 1);
+        var vSelector = pc.getRemoteStreams()[0].getVideoTracks()[0];
+        pc.getStats(function(stats) {
+            var result = stats.result();
+            for (var i = 0; i < result.length; ++i) {
+                if (result[i].type === "ssrc") {
+                    var ssrc = result[i];
+                    var bytesReceived = parseInt(ssrc.stat("bytesReceived"));
+                    var bitRate = (bytesReceived - statistics.BytesReceivedVideo) / 1024;
+                    $('#BitRateVideo').val(bitRate + "KB/s");
+                    $('#BytesReceivedVideo').val(ssrc.stat("bytesReceived"));
+                    $('#PacketsReceivedVideo').val(ssrc.stat("packetsReceived"));
+                    $('#PacketsLostVideo').val(ssrc.stat("packetsLost"));
+                    statistics.BytesReceivedVideo = bytesReceived;
+                }
             }
-            // Remove CN line in sdp
-            sdpLines.splice(i, 1);
-        }
+        }, vSelector);
     }
-
-    sdpLines[mLineIndex] = mLineElements.join(' ');
-    return sdpLines;
-}
+}, 2000);

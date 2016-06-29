@@ -66,9 +66,11 @@ class DBServer{
     public function escapeString($data){
         return $this->dbconn->escape_string($data);   
     }
+    /**
+     * Close database connection
+     */
     public function closeDbConnection(){
         pg_close($this->dbconn);
     }
 }
-
 ?>

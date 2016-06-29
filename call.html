@@ -45,23 +45,22 @@
                     <div>
                         <video id="localVideo" autoplay muted=""></video>
                     </div>
-                    <div>
-                        <div class="form-group">
-                            <label for="searchUser">Video</label>
-                            <button class="btn btn-default" onclick="return startRTC()">Włącz</button>
-                            <button class="btn btn-default" onclick="return hangupCall()">Wyłącz</button>
-                        </div>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-default" onclick="return startRTC()">Włącz kamerę</button>
+                        <button class="btn btn-default" onclick="return hangupCall()">Wyłącz kamerę</button>
                     </div>
-                    <div style="margin-top: 20px;">
-                        <form class="form-inline">
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-success" onclick="return connectToUser()">Połącz</button>
+                        <button class="btn btn-danger" onclick="return hangupCall()">Rozłącz</button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <form class="form">
                             <div class="form-group">
                                 <label for="searchUser">Szukaj</label>
                                 <input type="text" class="form-control" id="searchUser" placeholder="Szukaj użytkownika" autocomplete="off">
                             </div>
-                            <button class="btn btn-success" onclick="return connectToUser()">Połącz</button>
-                            <button class="btn btn-danger" onclick="return hangupCall()">Rozłącz</button>
                         </form>
-                        <div i class="dropdown" style="margin-left: 48px;">
+                        <div i class="dropdown" style="margin-left: 0px;">
                             <ul id="searchUserResults" class="dropdown-menu" aria-expanded="false" data-toggle="dropdown" aria-haspopup="true">
                             </ul>
                         </div>
@@ -76,7 +75,46 @@
     <div class="panel panel-primary">
         <div class="panel-heading">Parametry połaczenia</div>
         <div class="panel-body">
-            Tutaj będą parametry połaczenia
+            <div class="row">
+                <div class="col col-sm-5">
+                    <label>Parametry audio</label>
+                    <div class- "form-control">
+                        <label>BitRate</label>
+                        <input id="BitRateAudio" type="text" class="form-control" autocomplete="off" />
+                    </div>
+                    <div class- "form-control">
+                        <label>BytesReceived</label>
+                        <input id="BytesReceivedAudio" type="text" class="form-control" autocomplete="off" />
+                    </div>
+                    <div class- "form-control">
+                        <label>PacketsReceived</label>
+                        <input id="PacketsReceivedAudio" type="text" class="form-control" autocomplete="off" />
+                    </div>
+                    <div class- "form-control">
+                        <label>PacketsLost</label>
+                        <input id="PacketsLostAudio" type="text" class="form-control" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="col col-sm-5">
+                    <label>Parametry video</label>
+                    <div class- "form-control">
+                        <label>BitRate</label>
+                        <input id="BitRateVideo" type="text" class="form-control" autocomplete="off" />
+                    </div>
+                    <div class- "form-control">
+                        <label>BytesReceived</label>
+                        <input id="BytesReceivedVideo" type="text" class="form-control" autocomplete="off" />
+                    </div>
+                    <div class- "form-control">
+                        <label>PacketsReceived</label>
+                        <input id="PacketsReceivedVideo" type="text" class="form-control" autocomplete="off" />
+                    </div>
+                    <div class- "form-control">
+                        <label>PacketsLost</label>
+                        <input id="PacketsLostVideo" type="text" class="form-control" autocomplete="off" />
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script src="https://umsproj.doms.net:8443/socket.io/socket.io.js"></script>

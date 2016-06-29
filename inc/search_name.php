@@ -1,4 +1,9 @@
 <?php
+/**
+ * This search for user
+ * 
+ * @author Jan Sobczak
+ */
 require_once("config.php");
 
 $searchName = @$_POST['SearchName'];

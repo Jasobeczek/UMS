@@ -1,35 +1,26 @@
 <?php
 /**
- * This register or login user
- * Create cookie for session
+ * This register user
+ * 
+ * @author Jan Sobczak
  */
 require_once("config.php");
 
-$userName = @$_POST['UserName'];
+$userLogin = @$_POST['UserLogin'];
 $userPass = @$_POST['UserPassword'];
-$userRegister = @$_POST['UserRegister'];
+$userName = @$_POST['UserName'];
+$userSurname = @$_POST['UserSurname'];
 
-if (!is_null($userName) && $userName!="" && $userPass != "" && !is_null($userPass)) {
-	//Register
-	if ($userRegister == "true") {
-		$sql = "SELECT * FROM tbl_user WHERE login='" . $userName . "';";
+if (!is_null($userLogin) && !is_null($userPass) && !is_null($userName) && !is_null($userSurname)) {	
+	$sql = "SELECT * FROM tbl_user WHERE login='" . $userLogin . "';";
+
+	$results = $dbServer->performDbQuery($sql);
+	if (pg_num_rows($results) == 0) {
+		$sql = "INSERT INTO tbl_user VALUES (DEFAULT,'" . $userLogin . "','" . md5($userPass) . "', '" . $userName . "' , '" . $userSurname . "')";
 		$results = $dbServer->performDbQuery($sql);
-		if (pg_num_rows($results) == 0) {
-			$sql = "INSERT INTO tbl_user VALUES (DEFAULT,'" . $userName . "','" . md5($userPass) . "')";
-			$results = $dbServer->performDbQuery($sql);
-			echo "success";
-		}
-		else die('exists');
+		echo "success";
 	}
-	//Login
-	else{
-		$sql = "SELECT * FROM tbl_user WHERE login='" . $userName . "' AND pass='" . md5($userPass) . "';";
-		$results = $dbServer->performDbQuery($sql);
-		if (pg_num_rows($results) != 0) {
-			setcookie("umsName", $userName, time()+3600);
-			echo "success";
-		}
-	}
+	else die('exists');
 }
 else die("error");
 ?>

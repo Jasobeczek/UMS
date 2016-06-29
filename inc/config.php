@@ -1,9 +1,8 @@
 <?php
 /**
- * Server and session configuration for umsproj
+ * Server and session configuration for ums-proj
  * 
  * This file is responsible for configuring database connection
- * and session handler.
  * 
  * @author Jan Sobczak
  */

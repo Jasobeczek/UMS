@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    //For proper searching mechanism 
     $('#searchUser').keyup(function() {
         console.log("Handler for .keypress() called: " + $('#searchUser').val());
         if ($('#searchUser').val() === "" || $('#searchUserResults').css("display") === 'none') {
@@ -16,6 +17,9 @@ $(document).ready(function() {
     });
 });
 
+/**
+ * Log out user
+ */
 function logOut() {
     $.ajax({
         type: "GET",
@@ -32,6 +36,10 @@ function logOut() {
     });
 }
 
+/**
+ * Search for user
+ * @param  {string} searchName search string
+ */
 function searchName(searchName) {
     $.ajax({
         type: "POST",
@@ -62,6 +70,10 @@ function searchName(searchName) {
     });
 }
 
+/**
+ * Connect to user
+ * @return {bool} false
+ */
 function connectToUser() {
     var roomName = $('#searchUser').val();
     startWebRTC(roomName);
