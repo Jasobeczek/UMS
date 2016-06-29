@@ -95,11 +95,8 @@ function startRTC() {
  * Stop webRTC socket
  * @return {bool} false
  */
-function stopRTC() {
-    maybeStop();
-}
-
 function hangupCall() {
-    hangup();
-    reconnectSelf();
+    maybeStop();
+    return false;
+
 }

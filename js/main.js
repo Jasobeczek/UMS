@@ -67,9 +67,15 @@ function startWebRTC(roomName) {
     remoteVideo = document.querySelector('#remoteVideo');
 
     //Send join request to server
-    if (room !== '' && room) {
+    if (room !== '' && room && !isInRoom) {
         socket.emit('create or join', room);
         console.log('Attempted to create or  join room', room);
+    } else if (room !== '') {
+        alert("Jesteś już połączony!");
+        return null;
+    } else {
+        alert("Nie wybrałeś nazwy użytkownika!");
+        return null;
     }
 
     //Respond to created message
@@ -90,7 +96,8 @@ function startWebRTC(roomName) {
     });
 
     socket.on('joined', function(room) {
-        console.log('Joined room' + room);
+        console.log('Joined room ' + room);
+        isChannelReady = true;
         isInRoom = true;
     });
 
@@ -112,7 +119,7 @@ function startWebRTC(roomName) {
     //Respond to leave message
     //Log messages are message shown on server site
     //useful for debugging
-    socket.on('leave', function(array) {
+    socket.on('leave', function() {
         console.log('Leaved: ' + room);
         if (pc) {
             pc.close();
@@ -120,10 +127,12 @@ function startWebRTC(roomName) {
         pc = null;
         socket = null;
         isInRoom = false;
+        isStarted = false;
+        isChannelReady = false;
     });
 
     socket.on('offer', function(message) {
-        if (!isInitiator && !isStarted) {
+        if (!isStarted) {
             maybeStart();
         }
         pc.setRemoteDescription(new RTCSessionDescription(message));
@@ -185,17 +194,8 @@ function startWebRTC(roomName) {
     console.log('Getting user media with constraints', constraints);
 }
 
-////////////////////////////////////////////////
-
-function sendMessage(message) {
-    console.log('Client sending message: ', message);
-    socket.emit('message', message);
-}
-
-
 if (location.hostname !== 'localhost') {
     requestTurn(
-        //'https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913'
         'https://umsproj.doms.net:8443/turn?username=41784574&key=4080218913'
     );
 }
@@ -339,7 +339,7 @@ function handleRemoteStreamRemoved(event) {
 function hangup() {
     console.log('Hanging up.');
     stop();
-    sendMessage('bye');
+    maybeStop();
 }
 
 function handleRemoteHangup() {
@@ -352,7 +352,9 @@ function stop() {
     isStarted = false;
     // isAudioMuted = false;
     // isVideoMuted = false;
-    pc.close();
+    if (pc) {
+        pc.close();
+    }
     pc = null;
 }
 

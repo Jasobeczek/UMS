@@ -1,5 +1,4 @@
 <?php
-require 'server_class.php';
 /**
  * Server and session configuration for umsproj
  * 
@@ -8,8 +7,8 @@ require 'server_class.php';
  * 
  * @author Jan Sobczak
  */
+require 'server_class.php';
 if (!isset($dbServer)){
     $dbServer = new DBServer('localhost', 'ums', 'ums.123', 'ums');
 }
-
 ?>

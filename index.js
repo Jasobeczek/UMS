@@ -35,17 +35,6 @@ io.sockets.on('connection', function(socket) {
         socket.emit('log', array);
     }
 
-    //Server recived general message
-    /*socket.on('message', function(message) {
-        log('Client said: ', message);
-        console.log('Client said: ', message);
-
-
-        // for a real app, would be room-only (not broadcast)
-        //io.sockets.in(room).emit('message', message);
-        socket.broadcast.emit('message', message);
-    });*/
-
     socket.on('offer', function(array) {
         var message = array[0];
         var room = array[1];
@@ -62,7 +51,6 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('candidate', function(array) {
-
         var message = array[0];
         var room = array[1];
         console.log('Received candidate from ' + socket.id + ' in room: ' + room);
@@ -80,16 +68,19 @@ io.sockets.on('connection', function(socket) {
     //Remove this socket from room
     socket.on('bye', function(room) {
         console.log('Client ID ' + socket.id + ' leaving room ' + room);
+        socket.emit('leave');
+        socket.to(room).emit('bye', room);
         socket.leave(room);
-        socket.to(room).emit('leave', room);
-        socket.disconnect();
-        var numClients = io.sockets.socket.rooms[room].length;
-        console.log('Room ' + room + ' now has ' + numClients + ' client(s)');
+        //socket.disconnect();
+        var ioRooms = io.sockets.adapter.rooms;
+        if (ioRooms[room]) {
+            var numClients = ioRooms[room].length;
+            console.log('Room ' + room + ' now has ' + numClients + ' client(s)');
+        } else console.log('Room ' + room + ' does not exits');
 
     });
 
     //Server received create or join message
-    //
     socket.on('create or join', function(room) {
         log('Received request to create or join room ' + room);
         console.log('Received request to create or join room ' + room);
@@ -99,9 +90,8 @@ io.sockets.on('connection', function(socket) {
             socket.join(room);
             socket.emit('created', room);
         } else { //Room exists
-            if (ioRooms[room].length > 2) {
+            if (ioRooms[room].length >= 2) {
                 socket.emit('full', room); //Send message to initiator - room is full
-
             } else {
                 socket.join(room);
                 socket.emit('joined', room); //Sned message to initiator to inform that he is in room
@@ -115,7 +105,6 @@ io.sockets.on('connection', function(socket) {
 
     //Server received ipaddr message
     //This is unused? 
-    // 
     socket.on('ipaddr', function() {
         var ifaces = os.networkInterfaces();
         for (var dev in ifaces) {
